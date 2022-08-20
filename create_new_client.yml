@@ -1,0 +1,15 @@
+# ansible-playbook create_new_client.yml --extra-vars "client=<>" -l <host> -u root --key-file "<key>"
+# ansible-playbook create_new_client.yml -l <host> -u root --key-file "<key>"
+
+- hosts: all
+
+  # vars:
+  #   client: {{ client }}
+
+  vars_prompt:
+  - name: client
+    prompt: Client name
+    private: no
+
+  roles:
+    - create_new_client

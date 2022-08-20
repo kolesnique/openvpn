@@ -1,0 +1,8 @@
+# ansible-playbook setup_ovpn_server.yml -l <host> -u root --key-file "<key>"
+
+- hosts: all
+  vars:
+    # добавить переменую название сервера
+    # добавить переменные для сетей в шаблон
+  roles:
+    - setup_ovpn_server

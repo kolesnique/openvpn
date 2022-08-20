@@ -1,0 +1,103 @@
+
+- name: easyrsa gen new client cert
+  ansible.builtin.command:
+    cmd: /etc/openvpn/easy-rsa/easyrsa build-client-full {{ client }} nopass
+    chdir: /etc/openvpn/easy-rsa
+    creates: /etc/openvpn/easy-rsa/pki/issued/{{ client }}.crt
+
+- name: create directory for clients config and cert if it does not exist
+  ansible.builtin.file:
+    path: /etc/openvpn/for_vpn_clients/{{ client }}
+    state: directory
+    mode: '0755'
+
+- name: copy ca.crt and ta.key to /etc/openvpn/for_vpn_clients/{{ client }}
+  ansible.builtin.copy:
+    src: /etc/openvpn/easy-rsa/pki/{{ item }}
+    dest: /etc/openvpn/for_vpn_clients/{{ client }}/{{ item | basename }}
+    mode: "0640"
+    remote_src: yes
+  loop:
+    - ca.crt
+    - ta.key
+
+- name: copy ca.crt and ta.key to /etc/openvpn/for_vpn_clients/{{ client }}
+  ansible.builtin.copy:
+    src: /etc/openvpn/easy-rsa/pki/{{ item }}
+    dest: /etc/openvpn/for_vpn_clients/{{ client }}/{{ item | basename }}
+    mode: "0640"
+    remote_src: yes
+  loop:
+    - ca.crt
+    - ta.key
+
+- name: copy {{ client }}.crt to /etc/openvpn/for_vpn_clients/{{ client }}
+  ansible.builtin.copy:
+    src: /etc/openvpn/easy-rsa/pki/issued/{{ client }}.crt
+    dest: /etc/openvpn/for_vpn_clients/{{ client }}/
+    mode: "0640"
+    remote_src: yes
+
+- name: copy {{ client }}.key to /etc/openvpn/for_vpn_clients/{{ client }}
+  ansible.builtin.copy:
+    src: /etc/openvpn/easy-rsa/pki/private/{{ client }}.key
+    dest: /etc/openvpn/for_vpn_clients/{{ client }}/
+    mode: "0640"
+    remote_src: yes
+
+- name: add simple conf file for Linux
+  ansible.builtin.template:
+    src: client_conf.j2
+    dest: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}.conf
+    mode: "0640"
+
+- name: add simple conf file for Apple and Windows
+  ansible.builtin.template:
+    src: client_conf.j2
+    dest: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}.ovpn
+    mode: "0640"
+
+- name: read ca.crt
+  ansible.builtin.slurp:
+    src: /etc/openvpn/for_vpn_clients/{{ client }}/ca.crt
+  register: ca_crt
+
+- name: read ca.crt
+  ansible.builtin.slurp:
+    src: /etc/openvpn/for_vpn_clients/{{ client }}/ta.key
+  register: ta_key
+
+- name: read {{ client }}.crt
+  ansible.builtin.slurp:
+    src: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}.crt
+  register: client_crt
+
+- name: read {{ client }}.key
+  ansible.builtin.slurp:
+    src: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}.key
+  register: client_key
+
+- name: var for all in 1 config
+  ansible.builtin.set_fact:
+    ca: "{{ ca_crt['content'] | b64decode }}"
+    tls: "{{ ta_key['content'] | b64decode }}"
+    crt: "{{ client_crt['content'] | b64decode }}"
+    key: "{{ client_key['content'] | b64decode }}"
+
+- name: add all in 1 conf file for Linux
+  ansible.builtin.template:
+    src: client_conf_all_in_1.j2
+    dest: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}-all.conf
+    mode: "0640"
+
+- name: add all in 1 conf file for Apple and Windows
+  ansible.builtin.template:
+    src: client_conf_all_in_1.j2
+    dest: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}-all.ovpn
+    mode: "0640"
+
+- name: copy to local
+  ansible.builtin.fetch:
+    src: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}-all.conf
+    dest: ~/{{ client }}-all.conf
+    flat: yes
