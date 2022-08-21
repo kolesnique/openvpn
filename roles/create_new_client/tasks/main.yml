@@ -101,3 +101,9 @@
     src: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}-all.conf
     dest: ~/{{ client }}-all.conf
     flat: yes
+
+- name: copy to local
+  ansible.builtin.fetch:
+    src: /etc/openvpn/for_vpn_clients/{{ client }}/{{ client }}-all.ovpn
+    dest: ~/{{ client }}-all.ovpn
+    flat: yes

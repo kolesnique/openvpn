@@ -9,6 +9,12 @@ dh dh.pem
 tls-auth ta.key 0
 
 server 10.1.0.0 255.255.255.0
+topology subnet
+;client-to-client
+route 10.1.0.0 255.255.255.0
+push "redirect-gateway def1 bypass-dhcp"
+push "dhcp-option DNS 1.1.1.1"
+push "dhcp-option DNS 8.8.8.8"
 ifconfig-pool-persist ipp.txt
 keepalive 10 120
 
